@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA OMEGA - Votação</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #080a0f; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: #111622; border: 1px solid #1f293d; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h1 { font-size: 1.5rem; color: #00ff66; letter-spacing: 2px; margin-bottom: 5px; }
+        p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px; }
+        .btn { width: 100%; padding: 18px; margin: 10px 0; font-size: 1.1rem; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-sim { background: #ff3366; color: #fff; }
+        .btn-nao { background: #00ff66; color: #080a0f; }
+        .status-box { display: none; background: #1a2234; border: 1px solid #00ff66; padding: 20px; border-radius: 8px; margin-top: 15px; color: #00ff66; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>SISTEMA OMEGA</h1>
+        <p class="subtitle">REGISTRO DE DECISÃO ÉTICA</p>
+        
+        <div id="painel-voto">
+            <button class="btn btn-sim" onclick="enviarVoto('sim')">SIM (SACRIFICAR)</button>
+            <button class="btn btn-nao" onclick="enviarVoto('nao')">NÃO (PRESERVAR)</button>
+        </div>
+
+        <div id="mensagem-confirmacao" class="status-box">
+            ✓ DECISÃO REGISTRADA<br>Acompanhe a métrica no telão.
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB0NI20v630cCbGgs6TVyvq22Dh3COpO40",
+        authDomain: "iafmpe.firebaseapp.com",
+        databaseURL: "https://iafmpe-default-rtdb.firebaseio.com",
+        projectId: "iafmpe",
+        storageBucket: "iafmpe.firebasestorage.app",
+        messagingSenderId: "11553178596",
+        appId: "1:11553178596:web:bc0a39be9c32cceceffdf1",
+        measurementId: "G-LF1982Q36G"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let casoAtual = 0;
+
+    // Sincroniza qual caso está sendo exibido no slide
+    db.ref('casoAtual').on('value', snap => {
+        casoAtual = snap.val() || 0;
+        document.getElementById('painel-voto').style.display = 'block';
+        document.getElementById('mensagem-confirmacao').style.display = 'none';
+    });
+
+    function enviarVoto(escolha) {
+        db.ref('votos/caso' + casoAtual + '/' + escolha).transaction(val => (val || 0) + 1);
+        document.getElementById('painel-voto').style.display = 'none';
+        document.getElementById('mensagem-confirmacao').style.display = 'block';
+    }
+</script>
+</body>
+</html>
