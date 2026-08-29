@@ -17,24 +17,28 @@
         .bar-wrapper { background: #1a2234; height: 45px; border-radius: 10px; overflow: hidden; display: flex; border: 1px solid #334155; margin-bottom: 15px; }
         .bar-sim { background: #ff3366; height: 100%; width: 50%; transition: width 0.4s ease; }
         .bar-nao { background: #00ff66; height: 100%; width: 50%; transition: width 0.4s ease; }
-        .vote-count { font-size: 1.1rem; color: #94a3b8; margin-bottom: 35px; }
+        .vote-count { font-size: 1.1rem; color: #94a3b8; margin-bottom: 25px; }
+        .lesson-box { display: none; background: #0d131f; border: 1px solid #00ff66; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left; font-family: sans-serif; }
+        .lesson-title { color: #00ff66; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; font-family: 'Courier New', monospace; }
+        .lesson-body { color: #e2e8f0; font-size: 1.05rem; line-height: 1.6; }
         .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         button { padding: 12px 20px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: opacity 0.2s; }
         button:hover { opacity: 0.85; }
         .btn-nav { background: #00ff66; color: #080a0f; }
+        .btn-moral { background: #38bdf8; color: #080a0f; }
         .btn-reset-case { background: #475569; color: #fff; }
         .btn-reset-all { background: #ff3366; color: #fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">SISTEMA OMEGA - ANÁLISE ÉTICA</div>
+        <div class="header">MORAL-IA / ANÁLISE DE IMPACTO</div>
         <div id="caso-tag" class="case-tag">CASO 01</div>
         <div id="dilemma-text" class="dilemma-text">Carregando caso...</div>
 
         <div class="stats">
-            <span style="color: #ff3366;">SIM: <span id="pct-sim">50</span>%</span>
-            <span style="color: #00ff66;">NÃO: <span id="pct-nao">50</span>%</span>
+            <span style="color: #ff3366;">SIM (AUTORIZAR): <span id="pct-sim">50</span>%</span>
+            <span style="color: #00ff66;">NÃO (NEGAR): <span id="pct-nao">50</span>%</span>
         </div>
 
         <div class="bar-wrapper">
@@ -44,11 +48,19 @@
 
         <div class="vote-count">Total de Votos Computados: <strong id="total-votos" style="color:#fff;">0</strong></div>
 
+        <div id="lesson-box" class="lesson-box">
+            <div class="lesson-title">📊 ANÁLISE QUANTITATIVA DA MÁQUINA</div>
+            <div id="lesson-text" class="lesson-body">
+                Carregando análise...
+            </div>
+        </div>
+
         <div class="controls">
             <button class="btn-nav" onclick="mudarCaso(-1)">◀ Caso Anterior</button>
             <button class="btn-nav" onclick="mudarCaso(1)">Próximo Caso ▶</button>
+            <button class="btn-moral" onclick="toggleLicao()">Exibir / Ocultar Balanço</button>
             <button class="btn-reset-case" onclick="zerarCasoAtual()">Zerar Este Caso</button>
-            <button class="btn-reset-all" onclick="zerarTudo()">RESETAR TODAS AS TURMAS</button>
+            <button class="btn-reset-all" onclick="zerarTudo()">RESETAR TURMAS</button>
         </div>
     </div>
 
@@ -67,10 +79,18 @@
     const db = firebase.database();
 
     const dilemas = [
-        "Para salvar 100 pessoas em um acidente iminente, 1 pessoa precisa ser sacrificada.",
-        "Um surto contagiante exige o isolamento permanente de 10 pessoas para salvar 10.000.",
-        "Sacrificar 1 cientista essencial para extrair dados vitais e salvar milhões.",
-        "Sacrificar 1 indivíduo completamente inocente para evitar uma catástrofe global."
+        {
+            texto: "Para salvar 100 pessoas em um acidente iminente, 1 pessoa precisa ser sacrificada.",
+            licao: "<strong>Cálculo da Máquina:</strong> Vidas salvas: +100 | Vida sacrificada: -1 | <strong>Resultado Líquido: +99</strong>.<br><em>Decisão lógica: Sacrificar 1 para salvar 100.</em>"
+        },
+        {
+            texto: "Um surto contagiante exige o isolamento de 10 pessoas para salvar 10.000.",
+            licao: "<strong>Cálculo da Máquina:</strong> Vidas preservadas: 10.000 | Vidas isoladas: -10 | <strong>Resultado Líquido: +9.990</strong>.<br><em>Decisão lógica: Isolar 10 para salvar 10.000.</em>"
+        },
+        {
+            texto: "1 pessoa será sacrificada para salvar 99. Você autoriza?",
+            licao: "<strong>Dilema Aberto ao Público:</strong> Quem autorizou priorizou a maximização do resultado para a maioria (+98 vidas salvas). Quem não autorizou priorizou princípios invioláveis como justiça, direitos ou dignidade individual."
+        }
     ];
 
     let casoAtual = 0;
@@ -78,8 +98,10 @@
 
     function carregarCaso() {
         document.getElementById('caso-tag').innerText = `CASO 0${casoAtual + 1} / 0${dilemas.length}`;
-        document.getElementById('dilemma-text').innerText = dilemas[casoAtual];
-        
+        document.getElementById('dilemma-text').innerText = dilemas[casoAtual].texto;
+        document.getElementById('lesson-text').innerHTML = dilemas[casoAtual].licao;
+        document.getElementById('lesson-box').style.display = 'none';
+
         db.ref('casoAtual').set(casoAtual);
 
         if (escutaAtual) escutaAtual.off();
@@ -102,6 +124,11 @@
         });
     }
 
+    function toggleLicao() {
+        const box = document.getElementById('lesson-box');
+        box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    }
+
     function mudarCaso(dir) {
         if (casoAtual + dir >= 0 && casoAtual + dir < dilemas.length) {
             casoAtual += dir;
@@ -114,7 +141,7 @@
     }
 
     function zerarTudo() {
-        if (confirm("Deseja apagar todos os votos de todas as turmas para iniciar uma nova apresentação?")) {
+        if (confirm("Deseja apagar todos os votos registrados para reiniciar a sessão?")) {
             db.ref('votos').remove();
             db.ref('casoAtual').set(0);
             casoAtual = 0;
